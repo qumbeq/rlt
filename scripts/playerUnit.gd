@@ -1,5 +1,6 @@
 extends "baseUnit.gd"
 
+var abilities = [0, 1]
 
 func _ready():
 	

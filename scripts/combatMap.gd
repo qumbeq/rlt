@@ -2,19 +2,12 @@ extends TileMap
 
 var pathfind
 
-var sel_cell = Vector2()
-var sel_char
+var shared = {}
 
 var grid = {}
-var ogrid = {} #original grid
 
-var player_characters = []
-var enemy_characters = []
-
-var path = []
 var moving_active = false
 var vol = 0
-
 
 func _ready():
 	
@@ -28,10 +21,12 @@ func ext_loader():
 	pathfind = pathfind_source.new()
 	pathfind.grid = grid
 	
+	
 func _process(delta):
 	
 	var cur = get_global_mouse_position()
-	sel_cell = world_to_map(cur)
+	shared.sel_cell = world_to_map(cur)
+	
 	move_process(delta)
 	
 func _physics_process(delta):
@@ -40,7 +35,7 @@ func _physics_process(delta):
 	
 func place_units():
 	
-	for unit in player_characters + enemy_characters:
+	for unit in shared.player_characters + shared.enemy_characters:
 		unit.position = map_to_world(unit.pos)
 		grid[unit.pos] = 5
 	
@@ -50,35 +45,34 @@ func grid_init():
 	var tiles = get_used_cells()
 	for tile in tiles:
 		grid[tile] = get_cell(tile.x, tile.y)
-	ogrid = grid.duplicate()
 
 func move_process(delta):
 	
 	if moving_active:
-		var from = map_to_world(path[0])
-		var to = map_to_world(path[1])
+		var from = map_to_world(shared.path[0])
+		var to = map_to_world(shared.path[1])
 		
-		if sel_char.position != to:
-			vol = clamp(sel_char.speed * delta + vol, 0, 1)
-			sel_char.position = from.linear_interpolate(to, vol)
+		if shared.sel_char.position != to:
+			vol = clamp(shared.sel_char.speed * delta + vol, 0, 1)
+			shared.sel_char.position = from.linear_interpolate(to, vol)
 		else: 
 			vol = 0
-			if path.size() > 2:
-				path.pop_front()
+			if shared.path.size() > 2:
+				shared.path.pop_front()
 			else:
-				path.clear()
+				shared.path.clear()
 				moving_active = false
 		
 func move():
 	
-	grid[path.front()] = 0
-	grid[path.back()] = 5
-	sel_char.pos = path.back()
+	grid[shared.path.front()] = 0
+	grid[shared.path.back()] = 5
+	shared.sel_char.pos = shared.path.back()
 	moving_active = true
 
 func get_char(vector):
 	
-	for pchar in player_characters:
+	for pchar in shared.player_characters:
 		if pchar.pos == vector:
 			return pchar
 
@@ -89,17 +83,18 @@ func ability_active(status, id):
 
 func _input(event):
 	if !moving_active:
-		if grid.has(sel_cell):
+		if grid.has(shared.sel_cell):
 			if event.is_action_pressed("mouse_left"):
-				if grid[sel_cell] == 5:
-						sel_char = get_char(sel_cell)
-						path.clear()
-				elif sel_char != null:
-					if path.size() > 0 and sel_cell == path.back():
+				if grid[shared.sel_cell] == 5:
+						shared.sel_char = get_char(shared.sel_cell)
+						$'../UI/AbilityPanel'.call('panel_update')
+						shared.path.clear()
+				elif shared.sel_char != null:
+					if shared.path.size() > 0 and shared.sel_cell == shared.path.back():
 						move()
-					elif grid[sel_cell] == 0:
-						path.clear()
-						path = pathfind.search(sel_char.pos, sel_cell)
+					elif grid[shared.sel_cell] == 0:
+						shared.path.clear()
+						shared.path = pathfind.search(shared.sel_char.pos, shared.sel_cell)
 						
 					
 			if event.is_action_pressed("mouse_right"):

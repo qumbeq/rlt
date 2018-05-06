@@ -34,3 +34,14 @@ func spawn(pos, node):
 	node.add_child(self, true)
 	self.pos = pos
 	return self
+
+func take_damage(dmg):
+	
+	health -= dmg
+
+func start_turn():
+	
+	stamina = clamp(stamina + 35, 0, max_stamina) 
+	 
+func end_turn():
+	pass

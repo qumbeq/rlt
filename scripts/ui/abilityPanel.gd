@@ -5,7 +5,7 @@ var shared = {}
 
 var abilities = {}
 var buttons = {}
-
+var active
 
 func _ready():
 	
@@ -58,7 +58,7 @@ func ability_toggle(status, id):
 		for button_id in buttons.keys():
 			if button_id != id:
 				buttons[button_id].pressed = false
-		shared.active_ability = abilities[id]
+		shared.active_ability = ability.get_ability(id)
 	else:
 		shared.active_ability = null
 	

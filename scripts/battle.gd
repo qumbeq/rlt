@@ -7,17 +7,19 @@ var spawns = [Vector2(0,0), Vector2(0,1), Vector2(0,2), Vector2(1,0), Vector2(1,
 
 var shared = {
 	'sel_char': null, 
-	'sel_cell': Vector2(),  
+	'sel_cell': Vector2(), 
+	'targets': {}, 
 	'active_ability': null,
 	'player_characters': [],
 	'enemy_characters': [],
-	'path': {}
+	'path': {},
+	'turn': true
 	}
 
 var listen = {
 	'sel_char': null
 	}
-var kek = false
+
 
 func _ready():
 	init_share()
@@ -48,11 +50,28 @@ func ui_listener():
 	
 	if listen.sel_char != shared.sel_char:
 		$UI/AbilityPanel.call('panel_update')
-		$UI/Character.call('update_character_panel', shared.sel_char)
 		listen.sel_char = shared.sel_char
-	if $BattleField.moving_active:
+	if shared.sel_char != null:
 		$UI/Character.call('update_character_panel', shared.sel_char)
-		kek = true
-	elif kek:
-		$UI/Character.call('update_character_panel', shared.sel_char)
-		kek = false
+	
+
+func _input(event):
+	
+	if event.is_action_pressed('end_turn') and shared.turn == true:
+		end_turn()
+
+func end_turn():
+	
+	if shared.turn == true:
+		shared.turn = false
+		get_tree().call_group('PlayerCharacters', 'end_turn')
+		get_tree().call_group('EnemyCharacters', 'start_turn')
+		$BattleField.ai.ai_turn()
+		end_turn()
+		
+		
+	elif shared.turn == false:
+		shared.turn = true
+		get_tree().call_group('PlayerCharacters', 'start_turn')
+		get_tree().call_group('EnemyCharacters', 'end_turn')
+		

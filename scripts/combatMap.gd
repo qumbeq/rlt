@@ -1,8 +1,10 @@
 extends TileMap
 
 var pathfind
+var ai
 
 var shared = {}
+var listen = {}
 
 var grid = {}
 
@@ -15,30 +17,39 @@ func _ready():
 	ext_loader()
 	grid_init()
 	
-
 func ext_loader():
 	
 	var pathfind_source = load("res://scripts/pathfinder.gd")
 	pathfind = pathfind_source.new()
 	pathfind.grid = grid
 	
+	var ai_source = load("res://scripts/ai.gd")
+	ai = ai_source.new()
+	ai.grid = grid
+	ai.shared = shared
+	ai.battlefield = self
 	
 func _process(delta):
 	
 	var cur = get_global_mouse_position()
 	shared.sel_cell = world_to_map(cur)
 	
+	draw_listener()
 	move_process(delta)
 	
 func _physics_process(delta):
-	
+	#print(shared)
 	pass
-	
+
 func place_units():
 	
-	for unit in shared.player_characters + shared.enemy_characters:
+	for unit in shared.player_characters:
 		unit.position = map_to_world(unit.pos)
 		grid[unit.pos] = 5
+		
+	for unit in shared.enemy_characters:
+		unit.position = map_to_world(unit.pos)
+		grid[unit.pos] = 6
 	
 
 func grid_init():
@@ -46,6 +57,14 @@ func grid_init():
 	var tiles = get_used_cells()
 	for tile in tiles:
 		grid[tile] = get_cell(tile.x, tile.y)
+
+func ability_active():
+	
+	if shared.active_ability != null:
+		shared.targets = shared.active_ability.activated(shared.sel_char, grid)
+	else:
+		shared.targets.clear()
+	clear_path()
 
 func move_process(delta):
 	
@@ -82,6 +101,10 @@ func get_char(vector):
 		if echar.pos == vector:
 			return echar
 
+func select_char(pos):
+	
+	shared.sel_char = get_char(pos)
+	
 func get_wp(q):
 	
 	if str(q) == 'last':
@@ -98,7 +121,12 @@ func tile_move_cost(tile):
 		return 1
 	else:
 		return 0
+
+func clear_path():
 	
+	shared.path.clear()
+	overpath.clear()
+
 func calc_path(path):
 	
 	var result = {}
@@ -107,7 +135,6 @@ func calc_path(path):
 	overpath.clear()
 	for wp in path:
 		tilecost = tile_move_cost(wp) * shared.sel_char.move_cost
-		printt(stamina, tilecost)
 		if stamina >= tilecost:
 			stamina -= tilecost
 			result[wp] = tilecost
@@ -116,22 +143,34 @@ func calc_path(path):
 	if result.size() > 1:
 		shared.path = result.duplicate()
 
+func draw_listener():
+	
+	if listen.size() == 0:
+		listen = shared.duplicate()
+	if listen.sel_char != shared.sel_char:
+		shared.active_ability = null
+		clear_path()
+		listen.sel_char = shared.sel_char
+	if listen.active_ability != shared.active_ability:
+		shared.targets.clear()
+		ability_active()
+		listen.active_ability = shared.active_ability
+
 func _input(event):
-	if !moving_active:
+	if !moving_active and shared.turn:
 		if grid.has(shared.sel_cell):
 			if event.is_action_pressed("mouse_left"):
-				if grid[shared.sel_cell] == 5:
-						shared.sel_char = get_char(shared.sel_cell)
-						shared.path.clear()
-				elif shared.sel_char != null and shared.sel_char.ally:
-					if shared.path.size() > 0 and shared.sel_cell == get_wp('last'):
-						move()
-					elif grid[shared.sel_cell] == 0:
-						shared.path.clear()
-						calc_path(pathfind.search(shared.sel_char.pos, shared.sel_cell))
-						
-						
-					
-			if event.is_action_pressed("mouse_right"):
-				pass
+				if shared.active_ability == null:
+					if grid[shared.sel_cell] == 5 or grid[shared.sel_cell] == 6:
+							select_char(shared.sel_cell)
+					elif shared.sel_char != null and shared.sel_char.ally:
+						if shared.path.size() > 0 and shared.sel_cell == get_wp('last'):
+							move()
+						elif grid[shared.sel_cell] == 0 and shared.active_ability == null:
+							calc_path(pathfind.search(shared.sel_char.pos, shared.sel_cell))
 				
+				elif shared.targets.has(shared.sel_cell) and shared.targets[shared.sel_cell] == 1:
+					shared.active_ability.use(shared.sel_char, get_char(shared.sel_cell))
+					
+		if event.is_action_pressed("mouse_right"):
+			shared.active_ability = null

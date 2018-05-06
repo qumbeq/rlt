@@ -11,8 +11,13 @@ var shared = {
 	'active_ability': null,
 	'player_characters': [],
 	'enemy_characters': [],
-	'path': []
+	'path': {}
 	}
+
+var listen = {
+	'sel_char': null
+	}
+var kek = false
 
 func _ready():
 	init_share()
@@ -21,7 +26,9 @@ func _ready():
 	spawn(2, enemy, shared.enemy_characters)
 	
 func _process(delta):
-	pass
+	
+	ui_listener()
+	
 
 func init_share():
 	
@@ -36,4 +43,16 @@ func spawn(count, type, array):
 		spawns.erase(spawn_loc)
 		array.append(type.instance().spawn(spawn_loc, self))
 	$BattleField.place_units()
+
+func ui_listener():
 	
+	if listen.sel_char != shared.sel_char:
+		$UI/AbilityPanel.call('panel_update')
+		$UI/Character.call('update_character_panel', shared.sel_char)
+		listen.sel_char = shared.sel_char
+	if $BattleField.moving_active:
+		$UI/Character.call('update_character_panel', shared.sel_char)
+		kek = true
+	elif kek:
+		$UI/Character.call('update_character_panel', shared.sel_char)
+		kek = false

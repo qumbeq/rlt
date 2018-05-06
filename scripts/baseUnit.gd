@@ -2,16 +2,22 @@ extends Node2D
 
 var pos = Vector2()
 var groupname
+var max_health = 100
 var health = 100
+var max_stamina = 100
 var stamina = 100
 var speed = 10
-
+var ally
+var move_cost
+var portrait = preload("res://sprites/portrait.png")
 
 func _ready():
 	pass
 	
 func init():
+	
 	add_to_group(groupname)
+	move_cost = 100 / speed
 	z_index = 1
 	
 func _physics_process(delta):

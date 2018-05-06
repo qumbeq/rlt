@@ -24,7 +24,8 @@ func ext_loader():
 func panel_update():
 		
 		remove_buttons()
-		parse_abilities(shared.sel_char)
+		if shared.sel_char.ally:
+			parse_abilities(shared.sel_char)
 
 
 func parse_abilities(sc):
@@ -38,6 +39,7 @@ func add_button(a):
 	var button = $Ability.duplicate(8)
 	buttons[a.id] = button
 	button.texture_normal = load(a.icon)
+	button.visible = true
 	button.connect("toggled", self, 'ability_toggle', [a.id])
 	add_child(button)
 

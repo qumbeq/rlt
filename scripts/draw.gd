@@ -13,6 +13,7 @@ func _process(delta):
 func _draw():
 	
 	var color = Color(.2,.5,.2)
+	var color2 = Color(.5,.2,.2)
 	var line = 3
 	var p = Vector2(30,15)
 	
@@ -26,6 +27,14 @@ func _draw():
 		
 	if shared.path.size() > 0:
 		for wp in shared.path:
+			var offset = BattleField.map_to_world(wp)
+			offset.y += 15
+			if wp == BattleField.get_wp('last'):
+				draw_circle(offset, 10, color)
+			draw_circle(offset, 5, color)
+	
+	if BattleField.overpath.size() > 0:
+		for wp in BattleField.overpath:
 			var offset  = BattleField.map_to_world(wp)
 			offset.y += 15
-			draw_circle(offset, 5, color)
+			draw_circle(offset, 5, color2) 

@@ -4,6 +4,7 @@ var abilities = [0, 1]
 
 func _ready():
 	
+	ally = true
 	groupname = "PlayerCharacters"
 	init()
 

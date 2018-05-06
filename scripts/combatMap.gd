@@ -8,6 +8,7 @@ var grid = {}
 
 var moving_active = false
 var vol = 0
+var overpath = []
 
 func _ready():
 	
@@ -49,25 +50,27 @@ func grid_init():
 func move_process(delta):
 	
 	if moving_active:
-		var from = map_to_world(shared.path[0])
-		var to = map_to_world(shared.path[1])
+		var from = map_to_world(get_wp(1))
+		var to = map_to_world(get_wp(2))
 		
 		if shared.sel_char.position != to:
 			vol = clamp(shared.sel_char.speed * delta + vol, 0, 1)
 			shared.sel_char.position = from.linear_interpolate(to, vol)
 		else: 
 			vol = 0
+			shared.sel_char.stamina -= shared.path[get_wp(2)]
 			if shared.path.size() > 2:
-				shared.path.pop_front()
+				shared.path.erase(get_wp(1))
 			else:
 				shared.path.clear()
+				overpath.clear()
 				moving_active = false
 		
 func move():
 	
-	grid[shared.path.front()] = 0
-	grid[shared.path.back()] = 5
-	shared.sel_char.pos = shared.path.back()
+	grid[get_wp(1)] = 0
+	grid[get_wp('last')] = 5
+	shared.sel_char.pos = get_wp('last')
 	moving_active = true
 
 func get_char(vector):
@@ -75,11 +78,43 @@ func get_char(vector):
 	for pchar in shared.player_characters:
 		if pchar.pos == vector:
 			return pchar
+	for echar in shared.enemy_characters:
+		if echar.pos == vector:
+			return echar
 
-func ability_active(status, id):
-	#print(id, status)
-	pass
+func get_wp(q):
 	
+	if str(q) == 'last':
+		return shared.path.keys()[shared.path.size() - 1]
+	elif q == 1:
+		return shared.path.keys()[0]
+	elif q == 2:
+		return shared.path.keys()[1] 
+		
+	
+func tile_move_cost(tile):
+	
+	if grid[tile] == 0:
+		return 1
+	else:
+		return 0
+	
+func calc_path(path):
+	
+	var result = {}
+	var tilecost
+	var stamina = shared.sel_char.stamina
+	overpath.clear()
+	for wp in path:
+		tilecost = tile_move_cost(wp) * shared.sel_char.move_cost
+		printt(stamina, tilecost)
+		if stamina >= tilecost:
+			stamina -= tilecost
+			result[wp] = tilecost
+		else:
+			overpath.append(wp)
+	if result.size() > 1:
+		shared.path = result.duplicate()
 
 func _input(event):
 	if !moving_active:
@@ -87,14 +122,14 @@ func _input(event):
 			if event.is_action_pressed("mouse_left"):
 				if grid[shared.sel_cell] == 5:
 						shared.sel_char = get_char(shared.sel_cell)
-						$'../UI/AbilityPanel'.call('panel_update')
 						shared.path.clear()
-				elif shared.sel_char != null:
-					if shared.path.size() > 0 and shared.sel_cell == shared.path.back():
+				elif shared.sel_char != null and shared.sel_char.ally:
+					if shared.path.size() > 0 and shared.sel_cell == get_wp('last'):
 						move()
 					elif grid[shared.sel_cell] == 0:
 						shared.path.clear()
-						shared.path = pathfind.search(shared.sel_char.pos, shared.sel_cell)
+						calc_path(pathfind.search(shared.sel_char.pos, shared.sel_cell))
+						
 						
 					
 			if event.is_action_pressed("mouse_right"):

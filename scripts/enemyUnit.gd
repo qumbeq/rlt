@@ -3,6 +3,7 @@ extends "baseUnit.gd"
 
 func _ready():
 	
+	ally = false
 	groupname = "EnemyCharacters"
 	init()
 

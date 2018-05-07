@@ -7,7 +7,7 @@ func _ready():
 	ally = true
 	groupname = "PlayerCharacters"
 	init()
-
+	
 func _physics_process(delta):
 	
 	

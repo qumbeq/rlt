@@ -7,7 +7,7 @@ func _init():
 	name = "Basic Attack"
 	icon = "res://sprites/icons/W_Sword001.png"
 	type = "attack"
-	
+	cost = 15
 	
 func activated(unit, grid):
 	
@@ -16,3 +16,4 @@ func activated(unit, grid):
 func use(unit, target):
 	
 	target.take_damage(damage)
+	unit.use_stamina(cost)

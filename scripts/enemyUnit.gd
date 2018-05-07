@@ -6,6 +6,7 @@ func _ready():
 	ally = false
 	groupname = "EnemyCharacters"
 	init()
+	
 
 func _physics_process(delta):
 	

@@ -4,6 +4,7 @@ var id
 var name
 var type
 var icon
+var cost
 
 var abilities = ['basicAttack', 'block'] 
 

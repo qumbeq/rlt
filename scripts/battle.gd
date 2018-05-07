@@ -19,7 +19,7 @@ var shared = {
 var listen = {
 	'sel_char': null
 	}
-
+	
 
 func _ready():
 	init_share()
